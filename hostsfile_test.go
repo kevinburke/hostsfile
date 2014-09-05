@@ -91,5 +91,13 @@ func TestSet(t *testing.T) {
 	hCopy := sampleHostsfile
 	hCopy.Set(net.ParseIP("10.0.0.1"), "tendot")
 	equals(t, len(hCopy.records), 3)
-	equals(t, len(sampleHostsfile.records), 2)
+	equals(t, hCopy.records[2].Hostnames["tendot"], true)
+	equals(t, hCopy.records[2].IpAddress.String(), "10.0.0.1")
+
+	// appending same element shouldn't change anything
+	hCopy.Set(net.ParseIP("10.0.0.1"), "tendot")
+	equals(t, len(hCopy.records), 3)
+
+	hCopy.Set(net.ParseIP("192.168.3.7"), "tendot")
+	equals(t, hCopy.records[2].IpAddress.String(), "192.168.3.7")
 }

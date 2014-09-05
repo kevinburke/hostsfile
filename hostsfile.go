@@ -72,15 +72,20 @@ func (h *Hostsfile) Set(ip net.IP, hostname string) error {
 	if len(hostname) == 0 {
 		return fmt.Errorf("Hostname cannot be empty")
 	}
-	addKey := false
+	addKey := true
 	for i := 0; i < len(h.records); i++ {
 		record := h.records[i]
 		if _, ok := record.Hostnames[hostname]; ok {
 			if record.IpAddress.Equal(ip) {
 				// tried to set a key that exists, nothing to do
+				addKey = false
 			} else {
 				// delete the key and be sure to add a new record.
 				delete(record.Hostnames, hostname)
+				if len(record.Hostnames) == 0 {
+					// delete the record
+					h.records = append(h.records[:i], h.records[i+1:]...)
+				}
 				addKey = true
 			}
 		}
