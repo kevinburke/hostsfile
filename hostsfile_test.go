@@ -39,6 +39,7 @@ func equals(tb testing.TB, exp, act interface{}) {
 }
 
 func TestDecode(t *testing.T) {
+	t.Parallel()
 	sampledata := "127.0.0.1 foobar\n# this is a comment\n10.0.0.1 anotheralias"
 	h, err := Decode(strings.NewReader(sampledata))
 	if err != nil {
@@ -80,14 +81,37 @@ var sampleHostsfile = Hostsfile{
 	},
 }
 
+var commentHostsfile = Hostsfile{
+	records: []Record{
+		Record{
+			comment: "# Don't delete this line!",
+		},
+		Record{
+			comment: "shouldnt matter",
+			isBlank: true,
+		},
+		Record{
+			IpAddress: net.ParseIP("192.168.0.1"),
+			Hostnames: map[string]bool{"bazbaz": true},
+		},
+	},
+}
+
 func TestEncode(t *testing.T) {
+	t.Parallel()
 	b := new(bytes.Buffer)
 	err := Encode(b, sampleHostsfile)
 	ok(t, err)
 	equals(t, b.String(), "127.0.0.1 foobar\n192.168.0.1 bazbaz\n")
+
+	b.Reset()
+	err = Encode(b, commentHostsfile)
+	ok(t, err)
+	equals(t, b.String(), "# Don't delete this line!\n\n192.168.0.1 bazbaz\n")
 }
 
 func TestSet(t *testing.T) {
+	t.Parallel()
 	hCopy := sampleHostsfile
 	hCopy.Set(net.ParseIP("10.0.0.1"), "tendot")
 	equals(t, len(hCopy.records), 3)

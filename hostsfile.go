@@ -110,10 +110,10 @@ func (h *Hostsfile) Remove(hostname string) error {
 func Encode(w io.Writer, h Hostsfile) error {
 	for _, record := range h.records {
 		var toWrite string
-		if len(record.comment) > 0 {
-			toWrite = record.comment
-		} else if record.isBlank {
+		if record.isBlank {
 			toWrite = ""
+		} else if len(record.comment) > 0 {
+			toWrite = record.comment
 		} else {
 			out := make([]string, len(record.Hostnames)+1)
 			out[0] = record.IpAddress.String()
