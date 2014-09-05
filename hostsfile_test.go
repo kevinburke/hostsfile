@@ -47,7 +47,7 @@ func TestDecode(t *testing.T) {
 	}
 	firstRecord := h.records[0]
 
-	assert(t, firstRecord.IpAddress.Equal(net.ParseIP("127.0.0.1")), "IP address should have been 127.0.0.1, was %s", firstRecord.IpAddress)
+	equals(t, firstRecord.IpAddress.IP.String(), "127.0.0.1")
 	equals(t, firstRecord.Hostnames["foobar"], true)
 	equals(t, len(firstRecord.Hostnames), 1)
 
@@ -66,53 +66,72 @@ func TestDecode(t *testing.T) {
 	if err.Error() != "Invalid hostsfile entry: blah" {
 		t.Errorf("expected Decode(\"blah\") to return invalid, got %s", err.Error())
 	}
+
+	h, err = Decode(strings.NewReader("##\n127.0.0.1\tlocalhost    2nd-alias"))
+	ok(t, err)
+	equals(t, h.records[0].Hostnames["2nd-alias"], true)
+
+	h, err = Decode(strings.NewReader("##\n127.0.0.1\tlocalhost # a comment"))
+	ok(t, err)
+	equals(t, h.records[0].Hostnames["#"], false)
+	equals(t, h.records[0].Hostnames["a"], false)
 }
 
-var sampleHostsfile = Hostsfile{
-	records: []Record{
-		Record{
-			IpAddress: net.ParseIP("127.0.0.1"),
-			Hostnames: map[string]bool{"foobar": true},
+func sample(t *testing.T) Hostsfile {
+	one27, err := net.ResolveIPAddr("ip", "127.0.0.1")
+	ok(t, err)
+	one92, err := net.ResolveIPAddr("ip", "192.168.0.1")
+	ok(t, err)
+	return Hostsfile{
+		records: []Record{
+			Record{
+				IpAddress: *one27,
+				Hostnames: map[string]bool{"foobar": true},
+			},
+			Record{
+				IpAddress: *one92,
+				Hostnames: map[string]bool{"bazbaz": true, "blahbar": true},
+			},
 		},
-		Record{
-			IpAddress: net.ParseIP("192.168.0.1"),
-			Hostnames: map[string]bool{"bazbaz": true, "blahbar": true},
-		},
-	},
+	}
 }
 
-var commentHostsfile = Hostsfile{
-	records: []Record{
-		Record{
-			comment: "# Don't delete this line!",
+func comment(t *testing.T) Hostsfile {
+	one92, err := net.ResolveIPAddr("ip", "192.168.0.1")
+	ok(t, err)
+	return Hostsfile{
+		records: []Record{
+			Record{
+				comment: "# Don't delete this line!",
+			},
+			Record{
+				comment: "shouldnt matter",
+				isBlank: true,
+			},
+			Record{
+				IpAddress: *one92,
+				Hostnames: map[string]bool{"bazbaz": true},
+			},
 		},
-		Record{
-			comment: "shouldnt matter",
-			isBlank: true,
-		},
-		Record{
-			IpAddress: net.ParseIP("192.168.0.1"),
-			Hostnames: map[string]bool{"bazbaz": true},
-		},
-	},
+	}
 }
 
 func TestEncode(t *testing.T) {
 	t.Parallel()
 	b := new(bytes.Buffer)
-	err := Encode(b, sampleHostsfile)
+	err := Encode(b, sample(t))
 	ok(t, err)
 	equals(t, b.String(), "127.0.0.1 foobar\n192.168.0.1 bazbaz blahbar\n")
 
 	b.Reset()
-	err = Encode(b, commentHostsfile)
+	err = Encode(b, comment(t))
 	ok(t, err)
 	equals(t, b.String(), "# Don't delete this line!\n\n192.168.0.1 bazbaz\n")
 }
 
 func TestRemove(t *testing.T) {
 	t.Parallel()
-	hCopy := sampleHostsfile
+	hCopy := sample(t)
 	equals(t, len(hCopy.records[1].Hostnames), 2)
 	hCopy.Remove("bazbaz")
 	equals(t, len(hCopy.records[1].Hostnames), 1)
@@ -124,16 +143,20 @@ func TestRemove(t *testing.T) {
 
 func TestSet(t *testing.T) {
 	t.Parallel()
-	hCopy := sampleHostsfile
-	hCopy.Set(net.ParseIP("10.0.0.1"), "tendot")
+	hCopy := sample(t)
+	one0, err := net.ResolveIPAddr("ip", "10.0.0.1")
+	ok(t, err)
+	hCopy.Set(*one0, "tendot")
 	equals(t, len(hCopy.records), 3)
 	equals(t, hCopy.records[2].Hostnames["tendot"], true)
 	equals(t, hCopy.records[2].IpAddress.String(), "10.0.0.1")
 
 	// appending same element shouldn't change anything
-	hCopy.Set(net.ParseIP("10.0.0.1"), "tendot")
+	hCopy.Set(*one0, "tendot")
 	equals(t, len(hCopy.records), 3)
 
-	hCopy.Set(net.ParseIP("192.168.3.7"), "tendot")
+	one92, err := net.ResolveIPAddr("ip", "192.168.3.7")
+	ok(t, err)
+	hCopy.Set(*one92, "tendot")
 	equals(t, hCopy.records[2].IpAddress.String(), "192.168.3.7")
 }

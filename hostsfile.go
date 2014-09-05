@@ -16,7 +16,7 @@ type Hostsfile struct {
 
 // A single line in the hosts file
 type Record struct {
-	IpAddress net.IP
+	IpAddress net.IPAddr
 	Hostnames map[string]bool
 	comment   string
 	isBlank   bool
@@ -25,18 +25,12 @@ type Record struct {
 // Adds a record to the list. If the hostname is present with a different IP
 // address, it will be reassigned. If the record is already present with the
 // same hostname/IP address data, it will not be added again.
-func (h *Hostsfile) Set(ip net.IP, hostname string) error {
-	if ip == nil {
-		return fmt.Errorf("Invalid IP address")
-	}
-	if len(hostname) == 0 {
-		return fmt.Errorf("Hostname cannot be empty")
-	}
+func (h *Hostsfile) Set(ipa net.IPAddr, hostname string) error {
 	addKey := true
 	for i := 0; i < len(h.records); i++ {
 		record := h.records[i]
 		if _, ok := record.Hostnames[hostname]; ok {
-			if record.IpAddress.Equal(ip) {
+			if record.IpAddress.IP.Equal(ipa.IP) {
 				// tried to set a key that exists, nothing to do
 				addKey = false
 			} else {
@@ -53,7 +47,7 @@ func (h *Hostsfile) Set(ip net.IP, hostname string) error {
 
 	if addKey {
 		nr := Record{
-			IpAddress: ip,
+			IpAddress: ipa,
 			Hostnames: map[string]bool{hostname: true},
 		}
 		h.records = append(h.records, nr)
@@ -77,7 +71,9 @@ func (h *Hostsfile) Remove(hostname string) (found bool) {
 	return
 }
 
-// Decodes the raw text of a hostsfile into a Hostsfile struct.
+// Decodes the raw text of a hostsfile into a Hostsfile struct. If a line
+// contains both an IP address and a comment, the comment will be lost.
+//
 // Interface example from the image package.
 func Decode(rdr io.Reader) (Hostsfile, error) {
 	var h Hostsfile
@@ -92,21 +88,24 @@ func Decode(rdr io.Reader) (Hostsfile, error) {
 			// comment line or blank line: skip it.
 			r.comment = line
 		} else {
-			vals := strings.SplitN(line, " ", 2)
+			vals := strings.Fields(line)
 			if len(vals) <= 1 {
 				return Hostsfile{}, fmt.Errorf("Invalid hostsfile entry: %s", line)
 			}
-			ip := net.ParseIP(vals[0])
-			if ip == nil {
-				return Hostsfile{}, fmt.Errorf("Invalid IP address: %s", vals[0])
+			ip, err := net.ResolveIPAddr("ip", vals[0])
+			if err != nil {
+				return Hostsfile{}, err
 			}
 			r := Record{
-				IpAddress: ip,
+				IpAddress: *ip,
 				Hostnames: map[string]bool{},
 			}
-			names := strings.Split(vals[1], " ")
-			for i := 0; i < len(names); i++ {
-				name := names[i]
+			for i := 1; i < len(vals); i++ {
+				name := vals[i]
+				if len(name) > 0 && name[0] == '#' {
+					// beginning of a comment. rest of the line is bunk
+					break
+				}
 				r.Hostnames[name] = true
 			}
 			h.records = append(h.records, r)
