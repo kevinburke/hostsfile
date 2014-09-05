@@ -44,18 +44,18 @@ func TestDecode(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	firstRecord := h.Records[0]
+	firstRecord := h.records[0]
 
 	assert(t, firstRecord.IpAddress.Equal(net.ParseIP("127.0.0.1")), "IP address should have been 127.0.0.1, was %s", firstRecord.IpAddress)
-	equals(t, firstRecord.Hostname, "foobar")
-	equals(t, len(firstRecord.Aliases), 0)
+	equals(t, firstRecord.Hostnames["foobar"], true)
+	equals(t, len(firstRecord.Hostnames), 1)
 
 	aliasSample := "127.0.0.1 name alias1 alias2 alias3"
 	h, err = Decode(strings.NewReader(aliasSample))
 	ok(t, err)
-	alses := h.Records[0].Aliases
-	equals(t, len(alses), 3)
-	equals(t, alses[2], "alias3")
+	hns := h.records[0].Hostnames
+	equals(t, len(hns), 4)
+	equals(t, hns["alias3"], true)
 
 	badline := strings.NewReader("blah")
 	h, err = Decode(badline)
@@ -68,10 +68,14 @@ func TestDecode(t *testing.T) {
 }
 
 var sampleHostsfile = Hostsfile{
-	Records: []Record{
+	records: []Record{
 		Record{
 			IpAddress: net.ParseIP("127.0.0.1"),
-			Hostname:  "foobar",
+			Hostnames: map[string]bool{"foobar": true},
+		},
+		Record{
+			IpAddress: net.ParseIP("192.168.0.1"),
+			Hostnames: map[string]bool{"bazbaz": true},
 		},
 	},
 }
@@ -80,5 +84,12 @@ func TestEncode(t *testing.T) {
 	b := new(bytes.Buffer)
 	err := Encode(b, sampleHostsfile)
 	ok(t, err)
-	equals(t, b.String(), "127.0.0.1 foobar")
+	equals(t, b.String(), "127.0.0.1 foobar\n192.168.0.1 bazbaz\n")
+}
+
+func TestSet(t *testing.T) {
+	hCopy := sampleHostsfile
+	hCopy.Set(net.ParseIP("10.0.0.1"), "tendot")
+	equals(t, len(hCopy.records), 3)
+	equals(t, len(sampleHostsfile.records), 2)
 }

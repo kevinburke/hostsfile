@@ -10,30 +10,33 @@ import (
 
 // Represents a hosts file. Records match a single line in the file.
 type Hostsfile struct {
-	Records []Record
-	raw     []string
+	records []Record
 }
 
 // A single line in the hosts file
 type Record struct {
 	IpAddress net.IP
-	Hostname  string
-	Aliases   []string
+	Hostnames map[string]bool
+	comment   string
+	isBlank   bool
 }
 
 // Decodes the raw text of a hostsfile into a Hostsfile struct.
 // Interface example from the image package.
-func Decode(r io.Reader) (Hostsfile, error) {
+func Decode(rdr io.Reader) (Hostsfile, error) {
 	var h Hostsfile
-	scanner := bufio.NewScanner(r)
+	scanner := bufio.NewScanner(rdr)
 	for scanner.Scan() {
 		rawLine := scanner.Text()
 		line := strings.TrimSpace(rawLine)
-		h.raw = append(h.raw, line)
-		if len(line) == 0 || line[0] == '#' {
+		var r Record
+		if len(line) == 0 {
+			r.isBlank = true
+		} else if line[0] == '#' {
 			// comment line or blank line: skip it.
+			r.comment = line
 		} else {
-			vals := strings.SplitN(line, " ", 3)
+			vals := strings.SplitN(line, " ", 2)
 			if len(vals) <= 1 {
 				return Hostsfile{}, fmt.Errorf("Invalid hostsfile entry: %s", line)
 			}
@@ -43,12 +46,14 @@ func Decode(r io.Reader) (Hostsfile, error) {
 			}
 			r := Record{
 				IpAddress: ip,
-				Hostname:  vals[1],
+				Hostnames: map[string]bool{},
 			}
-			if len(vals) > 2 {
-				r.Aliases = strings.Split(vals[2], " ")
+			names := strings.Split(vals[1], " ")
+			for i := 0; i < len(names); i++ {
+				name := names[i]
+				r.Hostnames[name] = true
 			}
-			h.Records = append(h.Records, r)
+			h.records = append(h.records, r)
 		}
 	}
 	if err := scanner.Err(); err != nil {
@@ -60,8 +65,35 @@ func Decode(r io.Reader) (Hostsfile, error) {
 // Adds a record to the list. If the hostname is present with a different IP
 // address, it will be reassigned. If the record is already present with the
 // same hostname/IP address data, it will not be added again.
-func (h *Hostsfile) Set(r Record) {
-	return
+func (h *Hostsfile) Set(ip net.IP, hostname string) error {
+	if ip == nil {
+		return fmt.Errorf("Invalid IP address")
+	}
+	if len(hostname) == 0 {
+		return fmt.Errorf("Hostname cannot be empty")
+	}
+	addKey := false
+	for i := 0; i < len(h.records); i++ {
+		record := h.records[i]
+		if _, ok := record.Hostnames[hostname]; ok {
+			if record.IpAddress.Equal(ip) {
+				// tried to set a key that exists, nothing to do
+			} else {
+				// delete the key and be sure to add a new record.
+				delete(record.Hostnames, hostname)
+				addKey = true
+			}
+		}
+	}
+
+	if addKey {
+		nr := Record{
+			IpAddress: ip,
+			Hostnames: map[string]bool{hostname: true},
+		}
+		h.records = append(h.records, nr)
+	}
+	return nil
 }
 
 // Removes a hostname from the list. If the hostname is an alias,
@@ -69,7 +101,29 @@ func (h *Hostsfile) Remove(hostname string) error {
 	return nil
 }
 
-// Writes a hostsfile to a string
+// Return the text representation of the hosts file.
 func Encode(w io.Writer, h Hostsfile) error {
+	for _, record := range h.records {
+		var toWrite string
+		if len(record.comment) > 0 {
+			toWrite = record.comment
+		} else if record.isBlank {
+			toWrite = ""
+		} else {
+			out := make([]string, len(record.Hostnames)+1)
+			out[0] = record.IpAddress.String()
+			i := 1
+			for name, _ := range record.Hostnames {
+				out[i] = name
+				i++
+			}
+			toWrite = strings.Join(out, " ")
+		}
+		toWrite += "\n"
+		_, err := w.Write([]byte(toWrite))
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
