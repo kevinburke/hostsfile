@@ -76,7 +76,7 @@ var sampleHostsfile = Hostsfile{
 		},
 		Record{
 			IpAddress: net.ParseIP("192.168.0.1"),
-			Hostnames: map[string]bool{"bazbaz": true},
+			Hostnames: map[string]bool{"bazbaz": true, "blahbar": true},
 		},
 	},
 }
@@ -102,12 +102,24 @@ func TestEncode(t *testing.T) {
 	b := new(bytes.Buffer)
 	err := Encode(b, sampleHostsfile)
 	ok(t, err)
-	equals(t, b.String(), "127.0.0.1 foobar\n192.168.0.1 bazbaz\n")
+	equals(t, b.String(), "127.0.0.1 foobar\n192.168.0.1 bazbaz blahbar\n")
 
 	b.Reset()
 	err = Encode(b, commentHostsfile)
 	ok(t, err)
 	equals(t, b.String(), "# Don't delete this line!\n\n192.168.0.1 bazbaz\n")
+}
+
+func TestRemove(t *testing.T) {
+	t.Parallel()
+	hCopy := sampleHostsfile
+	equals(t, len(hCopy.records[1].Hostnames), 2)
+	hCopy.Remove("bazbaz")
+	equals(t, len(hCopy.records[1].Hostnames), 1)
+	ok := hCopy.records[1].Hostnames["blahbar"]
+	assert(t, ok, "item \"blahbar\" not found in %v", hCopy.records[1].Hostnames)
+	hCopy.Remove("blahbar")
+	equals(t, len(hCopy.records), 1)
 }
 
 func TestSet(t *testing.T) {

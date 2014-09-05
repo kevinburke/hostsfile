@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sort"
 	"strings"
 )
 
@@ -101,9 +102,20 @@ func (h *Hostsfile) Set(ip net.IP, hostname string) error {
 	return nil
 }
 
-// Removes a hostname from the list. If the hostname is an alias,
-func (h *Hostsfile) Remove(hostname string) error {
-	return nil
+// Removes all references to hostname from the file. Returns false if the
+// record was not found in the file.
+func (h *Hostsfile) Remove(hostname string) (found bool) {
+	for i, record := range h.records {
+		if _, ok := record.Hostnames[hostname]; ok {
+			delete(record.Hostnames, hostname)
+			if len(record.Hostnames) == 0 {
+				// delete the record
+				h.records = append(h.records[:i], h.records[i+1:]...)
+			}
+			found = true
+		}
+	}
+	return
 }
 
 // Return the text representation of the hosts file.
@@ -115,13 +127,14 @@ func Encode(w io.Writer, h Hostsfile) error {
 		} else if len(record.comment) > 0 {
 			toWrite = record.comment
 		} else {
-			out := make([]string, len(record.Hostnames)+1)
-			out[0] = record.IpAddress.String()
-			i := 1
+			out := make([]string, len(record.Hostnames))
+			i := 0
 			for name, _ := range record.Hostnames {
 				out[i] = name
 				i++
 			}
+			sort.Strings(out)
+			out = append([]string{record.IpAddress.String()}, out...)
 			toWrite = strings.Join(out, " ")
 		}
 		toWrite += "\n"
