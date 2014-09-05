@@ -8,18 +8,21 @@ import (
 	"strings"
 )
 
-// Represents a hosts file
+// Represents a hosts file. Records match a single line in the file.
 type Hostsfile struct {
 	Records []Record
 	raw     []string
 }
 
+// A single line in the hosts file
 type Record struct {
 	IpAddress net.IP
 	Hostname  string
 	Aliases   []string
 }
 
+// Decodes the raw text of a hostsfile into a Hostsfile struct.
+// Interface example from the image package.
 func Decode(r io.Reader) (Hostsfile, error) {
 	var h Hostsfile
 	scanner := bufio.NewScanner(r)
@@ -52,4 +55,21 @@ func Decode(r io.Reader) (Hostsfile, error) {
 		return Hostsfile{}, err
 	}
 	return h, nil
+}
+
+// Adds a record to the list. If the hostname is present with a different IP
+// address, it will be reassigned. If the record is already present with the
+// same hostname/IP address data, it will not be added again.
+func (h *Hostsfile) Set(r Record) {
+
+}
+
+// Removes a hostname from the list. If the hostname is an alias,
+func (h *Hostsfile) Remove(hostname string) error {
+
+}
+
+// Writes a hostsfile to a string
+func Encode(w io.Writer, h Hostsfile) error {
+
 }
