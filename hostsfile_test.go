@@ -40,7 +40,7 @@ func equals(tb testing.TB, exp, act interface{}) {
 
 func TestDecode(t *testing.T) {
 	t.Parallel()
-	sampledata := "127.0.0.1 foobar\n# this is a comment\n10.0.0.1 anotheralias"
+	sampledata := "127.0.0.1 foobar\n# this is a comment\n\n10.0.0.1 anotheralias"
 	h, err := Decode(strings.NewReader(sampledata))
 	if err != nil {
 		t.Error(err.Error())
@@ -50,6 +50,9 @@ func TestDecode(t *testing.T) {
 	equals(t, firstRecord.IpAddress.IP.String(), "127.0.0.1")
 	equals(t, firstRecord.Hostnames["foobar"], true)
 	equals(t, len(firstRecord.Hostnames), 1)
+
+	equals(t, h.records[1].comment, "# this is a comment")
+	equals(t, h.records[2].isBlank, true)
 
 	aliasSample := "127.0.0.1 name alias1 alias2 alias3"
 	h, err = Decode(strings.NewReader(aliasSample))
@@ -69,7 +72,7 @@ func TestDecode(t *testing.T) {
 
 	h, err = Decode(strings.NewReader("##\n127.0.0.1\tlocalhost    2nd-alias"))
 	ok(t, err)
-	equals(t, h.records[0].Hostnames["2nd-alias"], true)
+	equals(t, h.records[1].Hostnames["2nd-alias"], true)
 
 	h, err = Decode(strings.NewReader("##\n127.0.0.1\tlocalhost # a comment"))
 	ok(t, err)

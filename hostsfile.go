@@ -96,7 +96,7 @@ func Decode(rdr io.Reader) (Hostsfile, error) {
 			if err != nil {
 				return Hostsfile{}, err
 			}
-			r := Record{
+			r = Record{
 				IpAddress: *ip,
 				Hostnames: map[string]bool{},
 			}
@@ -108,8 +108,8 @@ func Decode(rdr io.Reader) (Hostsfile, error) {
 				}
 				r.Hostnames[name] = true
 			}
-			h.records = append(h.records, r)
 		}
+		h.records = append(h.records, r)
 	}
 	if err := scanner.Err(); err != nil {
 		return Hostsfile{}, err
