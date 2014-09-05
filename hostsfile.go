@@ -22,47 +22,6 @@ type Record struct {
 	isBlank   bool
 }
 
-// Decodes the raw text of a hostsfile into a Hostsfile struct.
-// Interface example from the image package.
-func Decode(rdr io.Reader) (Hostsfile, error) {
-	var h Hostsfile
-	scanner := bufio.NewScanner(rdr)
-	for scanner.Scan() {
-		rawLine := scanner.Text()
-		line := strings.TrimSpace(rawLine)
-		var r Record
-		if len(line) == 0 {
-			r.isBlank = true
-		} else if line[0] == '#' {
-			// comment line or blank line: skip it.
-			r.comment = line
-		} else {
-			vals := strings.SplitN(line, " ", 2)
-			if len(vals) <= 1 {
-				return Hostsfile{}, fmt.Errorf("Invalid hostsfile entry: %s", line)
-			}
-			ip := net.ParseIP(vals[0])
-			if ip == nil {
-				return Hostsfile{}, fmt.Errorf("Invalid IP address: %s", vals[0])
-			}
-			r := Record{
-				IpAddress: ip,
-				Hostnames: map[string]bool{},
-			}
-			names := strings.Split(vals[1], " ")
-			for i := 0; i < len(names); i++ {
-				name := names[i]
-				r.Hostnames[name] = true
-			}
-			h.records = append(h.records, r)
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return Hostsfile{}, err
-	}
-	return h, nil
-}
-
 // Adds a record to the list. If the hostname is present with a different IP
 // address, it will be reassigned. If the record is already present with the
 // same hostname/IP address data, it will not be added again.
@@ -116,6 +75,47 @@ func (h *Hostsfile) Remove(hostname string) (found bool) {
 		}
 	}
 	return
+}
+
+// Decodes the raw text of a hostsfile into a Hostsfile struct.
+// Interface example from the image package.
+func Decode(rdr io.Reader) (Hostsfile, error) {
+	var h Hostsfile
+	scanner := bufio.NewScanner(rdr)
+	for scanner.Scan() {
+		rawLine := scanner.Text()
+		line := strings.TrimSpace(rawLine)
+		var r Record
+		if len(line) == 0 {
+			r.isBlank = true
+		} else if line[0] == '#' {
+			// comment line or blank line: skip it.
+			r.comment = line
+		} else {
+			vals := strings.SplitN(line, " ", 2)
+			if len(vals) <= 1 {
+				return Hostsfile{}, fmt.Errorf("Invalid hostsfile entry: %s", line)
+			}
+			ip := net.ParseIP(vals[0])
+			if ip == nil {
+				return Hostsfile{}, fmt.Errorf("Invalid IP address: %s", vals[0])
+			}
+			r := Record{
+				IpAddress: ip,
+				Hostnames: map[string]bool{},
+			}
+			names := strings.Split(vals[1], " ")
+			for i := 0; i < len(names); i++ {
+				name := names[i]
+				r.Hostnames[name] = true
+			}
+			h.records = append(h.records, r)
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return Hostsfile{}, err
+	}
+	return h, nil
 }
 
 // Return the text representation of the hosts file.
