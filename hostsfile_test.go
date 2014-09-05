@@ -44,15 +44,10 @@ func TestDecode(t *testing.T) {
 		t.Error(err.Error())
 	}
 	firstRecord := h.Records[0]
-	if !firstRecord.IpAddress.Equal(net.ParseIP("127.0.0.1")) {
-		t.Errorf("expected IP address to be 127.0.0.1, was %s", firstRecord.IpAddress)
-	}
-	if firstRecord.Hostname != "foobar" {
-		t.Errorf("expected hostname to be foobar, was %s", firstRecord.Hostname)
-	}
-	if len(firstRecord.Aliases) > 0 {
-		t.Errorf("expected aliases to be empty, was %s", firstRecord.Aliases)
-	}
+
+	assert(t, firstRecord.IpAddress.Equal(net.ParseIP("127.0.0.1")), "IP address should have been 127.0.0.1, was %s", firstRecord.IpAddress)
+	equals(t, firstRecord.Hostname, "foobar")
+	equals(t, len(firstRecord.Aliases), 0)
 
 	aliasSample := "127.0.0.1 name alias1 alias2 alias3"
 	h, err = Decode(strings.NewReader(aliasSample))
