@@ -1,6 +1,7 @@
 package hostsfile
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"path/filepath"
@@ -64,4 +65,20 @@ func TestDecode(t *testing.T) {
 	if err.Error() != "Invalid hostsfile entry: blah" {
 		t.Errorf("expected Decode(\"blah\") to return invalid, got %s", err.Error())
 	}
+}
+
+var sampleHostsfile = Hostsfile{
+	Records: []Record{
+		Record{
+			IpAddress: net.ParseIP("127.0.0.1"),
+			Hostname:  "foobar",
+		},
+	},
+}
+
+func TestEncode(t *testing.T) {
+	b := new(bytes.Buffer)
+	err := Encode(b, sampleHostsfile)
+	ok(t, err)
+	equals(t, b.String(), "127.0.0.1 foobar")
 }

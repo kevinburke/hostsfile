@@ -61,15 +61,15 @@ func Decode(r io.Reader) (Hostsfile, error) {
 // address, it will be reassigned. If the record is already present with the
 // same hostname/IP address data, it will not be added again.
 func (h *Hostsfile) Set(r Record) {
-
+	return
 }
 
 // Removes a hostname from the list. If the hostname is an alias,
 func (h *Hostsfile) Remove(hostname string) error {
-
+	return nil
 }
 
 // Writes a hostsfile to a string
 func Encode(w io.Writer, h Hostsfile) error {
-
+	return nil
 }
