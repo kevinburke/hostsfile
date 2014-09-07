@@ -39,10 +39,15 @@ func main() {
 
 	// Write to a temporary file and then atomically copy it into place.
 	tmp, err := ioutil.TempFile("/tmp", "hostsfile-temp")
-	ioutil.WriteFile(tmp.Name(), buf.Bytes(), 0644)
 	checkError(err)
+	// a little counter intuitive but this only sets permissions if you are
+	// creating the file.
 	err = ioutil.WriteFile(tmp.Name(), buf.Bytes(), 0644)
 	checkError(err)
+
+	err = os.Chmod(tmp.Name(), 0644)
+	checkError(err)
+
 	err = os.Rename(tmp.Name(), "/etc/hosts")
 	checkError(err)
 	fmt.Println("done")
