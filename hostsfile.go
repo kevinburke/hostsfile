@@ -22,6 +22,14 @@ type Record struct {
 	isBlank   bool
 }
 
+// returns true if a and b are not both ipv4 addresses
+func matchProtocols(a, b net.IP) bool {
+	ato4 := a.To4()
+	bto4 := b.To4()
+	return (ato4 == nil && bto4 == nil) ||
+		(ato4 != nil && bto4 != nil)
+}
+
 // Adds a record to the list. If the hostname is present with a different IP
 // address, it will be reassigned. If the record is already present with the
 // same hostname/IP address data, it will not be added again.
@@ -31,16 +39,20 @@ func (h *Hostsfile) Set(ipa net.IPAddr, hostname string) error {
 		record := h.records[i]
 		if _, ok := record.Hostnames[hostname]; ok {
 			if record.IpAddress.IP.Equal(ipa.IP) {
-				// tried to set a key that exists, nothing to do
+				// tried to set a key that exists with the same IP address,
+				// nothing to do
 				addKey = false
 			} else {
-				// delete the key and be sure to add a new record.
-				delete(record.Hostnames, hostname)
-				if len(record.Hostnames) == 0 {
-					// delete the record
-					h.records = append(h.records[:i], h.records[i+1:]...)
+				// if the protocol matches, delete the key and be sure to add
+				// a new record.
+				if matchProtocols(record.IpAddress.IP, ipa.IP) {
+					delete(record.Hostnames, hostname)
+					if len(record.Hostnames) == 0 {
+						// delete the record
+						h.records = append(h.records[:i], h.records[i+1:]...)
+					}
+					addKey = true
 				}
-				addKey = true
 			}
 		}
 	}

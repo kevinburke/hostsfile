@@ -144,6 +144,15 @@ func TestRemove(t *testing.T) {
 	equals(t, len(hCopy.records), 1)
 }
 
+func TestProtocols(t *testing.T) {
+	t.Parallel()
+	one92, _ := net.ResolveIPAddr("ip", "192.168.3.7")
+	ip6, _ := net.ResolveIPAddr("ip", "::1")
+	equals(t, matchProtocols(one92.IP, ip6.IP), false)
+	equals(t, matchProtocols(one92.IP, one92.IP), true)
+	equals(t, matchProtocols(ip6.IP, ip6.IP), true)
+}
+
 func TestSet(t *testing.T) {
 	t.Parallel()
 	hCopy := sample(t)
@@ -162,4 +171,10 @@ func TestSet(t *testing.T) {
 	ok(t, err)
 	hCopy.Set(*one92, "tendot")
 	equals(t, hCopy.records[2].IpAddress.String(), "192.168.3.7")
+
+	ip6, err := net.ResolveIPAddr("ip", "::1")
+	ok(t, err)
+	hCopy.Set(*ip6, "tendot")
+	equals(t, len(hCopy.records), 4)
+	equals(t, hCopy.records[3].IpAddress.String(), "::1")
 }
