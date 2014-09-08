@@ -41,15 +41,12 @@ func main() {
 	h.Set(*local, "news.ycombinator.com")
 	h.Set(*ip6, "news.ycombinator.com")
 
-	buf := new(bytes.Buffer)
-	hostsfile.Encode(buf, h)
 
 	// Write to a temporary file and then atomically copy it into place.
 	tmp, err := ioutil.TempFile("/tmp", "hostsfile-temp")
 	checkError(err)
-	// a little counter intuitive but this only sets permissions if you are
-	// creating the file.
-	err = ioutil.WriteFile(tmp.Name(), buf.Bytes(), 0644)
+
+	err = hostsfile.Encode(tmp, h)
 	checkError(err)
 
 	err = os.Chmod(tmp.Name(), 0644)
