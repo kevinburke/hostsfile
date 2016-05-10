@@ -7,6 +7,7 @@ import (
 	"net"
 	"sort"
 	"strings"
+	"sync"
 )
 
 // Represents a hosts file. Records match a single line in the file.
@@ -20,6 +21,7 @@ type Record struct {
 	Hostnames map[string]bool
 	comment   string
 	isBlank   bool
+	mu        sync.Mutex
 }
 
 // returns true if a and b are not both ipv4 addresses
@@ -37,7 +39,9 @@ func (h *Hostsfile) Set(ipa net.IPAddr, hostname string) error {
 	addKey := true
 	for i := 0; i < len(h.records); i++ {
 		record := h.records[i]
-		if _, ok := record.Hostnames[hostname]; ok {
+		record.mu.Lock()
+		_, ok := record.Hostnames[hostname]
+		if ok {
 			if record.IpAddress.IP.Equal(ipa.IP) {
 				// tried to set a key that exists with the same IP address,
 				// nothing to do
@@ -55,6 +59,7 @@ func (h *Hostsfile) Set(ipa net.IPAddr, hostname string) error {
 				}
 			}
 		}
+		record.mu.Unlock()
 	}
 
 	if addKey {
@@ -71,14 +76,19 @@ func (h *Hostsfile) Set(ipa net.IPAddr, hostname string) error {
 // record was not found in the file.
 func (h *Hostsfile) Remove(hostname string) (found bool) {
 	for i, record := range h.records {
+		record.mu.Lock()
 		if _, ok := record.Hostnames[hostname]; ok {
+			fmt.Printf("deleting %s from %v\n", hostname, record.Hostnames)
 			delete(record.Hostnames, hostname)
 			if len(record.Hostnames) == 0 {
 				// delete the record
 				h.records = append(h.records[:i], h.records[i+1:]...)
 			}
 			found = true
+		} else {
+			fmt.Printf("couldnt find %s in %v\n", hostname, record.Hostnames)
 		}
+		record.mu.Unlock()
 	}
 	return
 }

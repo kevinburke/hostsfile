@@ -16,7 +16,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/kevinburke/hostsfile"
+	hostsfile "github.com/kevinburke/hostsfile/lib"
 )
 
 func checkError(err error) {

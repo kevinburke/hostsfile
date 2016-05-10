@@ -85,6 +85,8 @@ func sample(t *testing.T) Hostsfile {
 	ok(t, err)
 	one92, err := net.ResolveIPAddr("ip", "192.168.0.1")
 	ok(t, err)
+	oneip6, err := net.ResolveIPAddr("ip", "fe80::1%lo0")
+	ok(t, err)
 	return Hostsfile{
 		records: []Record{
 			Record{
@@ -94,6 +96,10 @@ func sample(t *testing.T) Hostsfile {
 			Record{
 				IpAddress: *one92,
 				Hostnames: map[string]bool{"bazbaz": true, "blahbar": true},
+			},
+			Record{
+				IpAddress: *oneip6,
+				Hostnames: map[string]bool{"bazbaz": true},
 			},
 		},
 	}
@@ -124,7 +130,7 @@ func TestEncode(t *testing.T) {
 	b := new(bytes.Buffer)
 	err := Encode(b, sample(t))
 	ok(t, err)
-	equals(t, b.String(), "127.0.0.1 foobar\n192.168.0.1 bazbaz blahbar\n")
+	equals(t, b.String(), "127.0.0.1 foobar\n192.168.0.1 bazbaz blahbar\nfe80::1%lo0 bazbaz\n")
 
 	b.Reset()
 	err = Encode(b, comment(t))
@@ -159,22 +165,22 @@ func TestSet(t *testing.T) {
 	one0, err := net.ResolveIPAddr("ip", "10.0.0.1")
 	ok(t, err)
 	hCopy.Set(*one0, "tendot")
-	equals(t, len(hCopy.records), 3)
-	equals(t, hCopy.records[2].Hostnames["tendot"], true)
-	equals(t, hCopy.records[2].IpAddress.String(), "10.0.0.1")
+	equals(t, len(hCopy.records), 4)
+	equals(t, hCopy.records[3].Hostnames["tendot"], true)
+	equals(t, hCopy.records[3].IpAddress.String(), "10.0.0.1")
 
 	// appending same element shouldn't change anything
 	hCopy.Set(*one0, "tendot")
-	equals(t, len(hCopy.records), 3)
+	equals(t, len(hCopy.records), 4)
 
 	one92, err := net.ResolveIPAddr("ip", "192.168.3.7")
 	ok(t, err)
 	hCopy.Set(*one92, "tendot")
-	equals(t, hCopy.records[2].IpAddress.String(), "192.168.3.7")
+	equals(t, hCopy.records[3].IpAddress.String(), "192.168.3.7")
 
 	ip6, err := net.ResolveIPAddr("ip", "::1")
 	ok(t, err)
 	hCopy.Set(*ip6, "tendot")
-	equals(t, len(hCopy.records), 4)
-	equals(t, hCopy.records[3].IpAddress.String(), "::1")
+	equals(t, len(hCopy.records), 5)
+	equals(t, hCopy.records[4].IpAddress.String(), "::1")
 }
