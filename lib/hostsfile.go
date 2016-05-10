@@ -75,18 +75,20 @@ func (h *Hostsfile) Set(ipa net.IPAddr, hostname string) error {
 // Removes all references to hostname from the file. Returns false if the
 // record was not found in the file.
 func (h *Hostsfile) Remove(hostname string) (found bool) {
-	for i, record := range h.records {
+	for i := len(h.records) - 1; i >= 0; i-- {
+		record := h.records[i]
 		record.mu.Lock()
 		if _, ok := record.Hostnames[hostname]; ok {
-			fmt.Printf("deleting %s from %v\n", hostname, record.Hostnames)
 			delete(record.Hostnames, hostname)
 			if len(record.Hostnames) == 0 {
 				// delete the record
-				h.records = append(h.records[:i], h.records[i+1:]...)
+				if i == len(h.records)-1 {
+					h.records = h.records[:len(h.records)-1]
+				} else {
+					h.records = append(h.records[:i], h.records[i+1:]...)
+				}
 			}
 			found = true
-		} else {
-			fmt.Printf("couldnt find %s in %v\n", hostname, record.Hostnames)
 		}
 		record.mu.Unlock()
 	}
