@@ -106,6 +106,15 @@ func checkWritable(file string) error {
 	return nil
 }
 
+// dataPipedIn returns true if the user piped data via stdin.
+func dataPipedIn() bool {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return (stat.Mode() & os.ModeCharDevice) == 0
+}
+
 func main() {
 	flag.Usage = usg(usage, flag.CommandLine)
 	dryRunArg := flag.Bool("dry-run", false, "Print the updated host file to stdout instead of writing it")
@@ -134,17 +143,23 @@ func main() {
 			err = checkWritable(*fileArg)
 			checkError(err)
 		}
-		f, err := os.Open(*fileArg)
-		checkError(err)
-		defer f.Close()
+		var r io.Reader
+		if dataPipedIn() {
+			r = os.Stdin
+		} else {
+			f, err := os.Open(*fileArg)
+			checkError(err)
+			defer f.Close()
+			r = f
+		}
 		if *dryRunArg {
-			err = doAdd(f, os.Stdout, addflags.Args())
+			err = doAdd(r, os.Stdout, addflags.Args())
 			checkError(err)
 		} else {
 			tmp, err := ioutil.TempFile("/tmp", "hostsfile-temp")
 			checkError(err)
 			defer tmp.Close()
-			err = doAdd(f, tmp, addflags.Args())
+			err = doAdd(r, tmp, addflags.Args())
 			checkError(err)
 			err = doRename(tmp, *fileArg)
 			checkError(err)
@@ -156,16 +171,23 @@ func main() {
 			err = checkWritable(*fileArg)
 			checkError(err)
 		}
-		f, err := os.Open(*fileArg)
-		checkError(err)
+		var r io.Reader
+		if dataPipedIn() {
+			r = os.Stdin
+		} else {
+			f, err := os.Open(*fileArg)
+			checkError(err)
+			defer f.Close()
+			r = f
+		}
 		if *dryRunArg {
-			err = doRemove(f, os.Stdout, removeflags.Args())
+			err = doRemove(r, os.Stdout, removeflags.Args())
 			checkError(err)
 		} else {
 			tmp, err := ioutil.TempFile("/tmp", "hostsfile-temp")
 			checkError(err)
 			defer tmp.Close()
-			err = doRemove(f, tmp, removeflags.Args())
+			err = doRemove(r, tmp, removeflags.Args())
 			checkError(err)
 			err = doRename(tmp, *fileArg)
 			checkError(err)
