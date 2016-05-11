@@ -3,7 +3,45 @@
 This library will help you manipulate your /etc/hosts file. A description of
 the API [can be found at godoc][godoc].
 
-## Sample Usage
+## Command Line Usage
+
+You can install a command line binary:
+
+```
+go get github.com/kevinburke/hostsfile
+```
+
+and use it like so:
+
+```
+hostsfile add www.facebook.com www.twitter.com www.adroll.com 127.0.0.1
+hostsfile remove www.facebook.com www.twitter.com www.adroll.com
+```
+
+You may need to run the above commands as root to write to `/etc/hosts` (which
+is modified atomically).
+
+To print the new file to stdout, instead of writing it:
+
+```
+hostsfile add --dry-run www.facebook.com www.twitter.com www.adroll.com 127.0.0.1
+```
+
+You can also pipe a hostsfile in:
+
+```
+cat /etc/hosts | hostsfile add --dry-run www.facebook.com www.twitter.com www.adroll.com 127.0.0.1
+```
+
+Or specify a file to read from at the command line:
+
+```
+hostsfile add --file=sample-hostsfile www.facebook.com www.twitter.com www.adroll.com 127.0.0.1
+```
+
+## Library Usage
+
+You can also call the functions in this library from Go code.
 
 ```go
 package main
