@@ -88,16 +88,16 @@ func sample(t *testing.T) Hostsfile {
 	oneip6, err := net.ResolveIPAddr("ip", "fe80::1%lo0")
 	ok(t, err)
 	return Hostsfile{
-		records: []Record{
-			Record{
+		records: []*Record{
+			&Record{
 				IpAddress: *one27,
 				Hostnames: map[string]bool{"foobar": true},
 			},
-			Record{
+			&Record{
 				IpAddress: *one92,
 				Hostnames: map[string]bool{"bazbaz": true, "blahbar": true},
 			},
-			Record{
+			&Record{
 				IpAddress: *oneip6,
 				Hostnames: map[string]bool{"bazbaz": true},
 			},
@@ -109,15 +109,15 @@ func comment(t *testing.T) Hostsfile {
 	one92, err := net.ResolveIPAddr("ip", "192.168.0.1")
 	ok(t, err)
 	return Hostsfile{
-		records: []Record{
-			Record{
+		records: []*Record{
+			&Record{
 				comment: "# Don't delete this line!",
 			},
-			Record{
+			&Record{
 				comment: "shouldnt matter",
 				isBlank: true,
 			},
-			Record{
+			&Record{
 				IpAddress: *one92,
 				Hostnames: map[string]bool{"bazbaz": true},
 			},

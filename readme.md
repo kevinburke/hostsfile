@@ -64,10 +64,11 @@ func checkError(err error) {
 }
 
 func main() {
-	file, err := os.Open("/etc/hosts")
+	f, err := os.Open("/etc/hosts")
 	checkError(err)
-	h, err := hostsfile.Decode(file)
+	h, err := hostsfile.Decode(f)
 	checkError(err)
+
 	local, err := net.ResolveIPAddr("ip", "127.0.0.1")
 	checkError(err)
 	// Necessary for sites like facebook & gmail that resolve ipv6 addresses,
@@ -81,10 +82,10 @@ func main() {
 
 
 	// Write to a temporary file and then atomically copy it into place.
-	tmp, err := ioutil.TempFile("/tmp", "hostsfile-temp")
+	tmpf, err := ioutil.TempFile("/tmp", "hostsfile-temp")
 	checkError(err)
 
-	err = hostsfile.Encode(tmp, h)
+	err = hostsfile.Encode(tmpf, h)
 	checkError(err)
 
 	err = os.Chmod(tmp.Name(), 0644)
@@ -96,4 +97,4 @@ func main() {
 }
 ```
 
-[godoc]: http://godoc.org/github.com/kevinburke/hostsfile
+[godoc]: https://godoc.org/github.com/kevinburke/hostsfile

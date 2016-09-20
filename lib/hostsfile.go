@@ -12,7 +12,12 @@ import (
 
 // Represents a hosts file. Records match a single line in the file.
 type Hostsfile struct {
-	records []Record
+	records []*Record
+}
+
+// Records returns an array of all entries in the hostsfile.
+func (h *Hostsfile) Records() []*Record {
+	return h.records
 }
 
 // A single line in the hosts file
@@ -63,7 +68,7 @@ func (h *Hostsfile) Set(ipa net.IPAddr, hostname string) error {
 	}
 
 	if addKey {
-		nr := Record{
+		nr := &Record{
 			IpAddress: ipa,
 			Hostnames: map[string]bool{hostname: true},
 		}
@@ -105,7 +110,7 @@ func Decode(rdr io.Reader) (Hostsfile, error) {
 	for scanner.Scan() {
 		rawLine := scanner.Text()
 		line := strings.TrimSpace(rawLine)
-		var r Record
+		r := new(Record)
 		if len(line) == 0 {
 			r.isBlank = true
 		} else if line[0] == '#' {
@@ -120,7 +125,7 @@ func Decode(rdr io.Reader) (Hostsfile, error) {
 			if err != nil {
 				return Hostsfile{}, err
 			}
-			r = Record{
+			r = &Record{
 				IpAddress: *ip,
 				Hostnames: map[string]bool{},
 			}
