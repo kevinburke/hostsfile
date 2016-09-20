@@ -12,6 +12,8 @@ import (
 	"github.com/kevinburke/hostsfile/lib"
 )
 
+const Version = "0.1"
+
 func checkError(err error) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
@@ -25,6 +27,7 @@ The commands are:
 
 	add     <hostname> [<hostname...>] <ip>
 	remove  <hostname> [<hostname...>]
+	version
 	help    You're looking at it.
 
 `
@@ -131,10 +134,10 @@ func main() {
 	removeflags.StringVar(fileArg, "file", "/etc/hosts", "File to read/write")
 
 	flag.Parse()
-	if flag.NArg() < 2 {
-		usg(usage, flag.CommandLine)()
+	subargs := []string{}
+	if flag.NArg() > 1 {
+		subargs = flag.Args()[1:]
 	}
-	subargs := flag.Args()[1:]
 	switch flag.Arg(0) {
 	case "add":
 		err := addflags.Parse(subargs)
@@ -201,6 +204,9 @@ func main() {
 		default:
 			usg(usage, flag.CommandLine)()
 		}
+	case "version":
+		fmt.Fprintf(os.Stderr, "hostsfile version %s\n", Version)
+		os.Exit(2)
 	default:
 		fmt.Fprintf(os.Stderr, "hostsfile: unknown subcommand \"%s\"\n\n", flag.Arg(0))
 		usg(usage, flag.CommandLine)()
