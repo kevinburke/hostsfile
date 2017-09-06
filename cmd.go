@@ -142,7 +142,7 @@ func main() {
 	case "add":
 		err := addflags.Parse(subargs)
 		checkError(err)
-		if *dryRunArg == false {
+		if !*dryRunArg {
 			err = checkWritable(*fileArg)
 			checkError(err)
 		}
@@ -170,7 +170,7 @@ func main() {
 	case "remove":
 		err := removeflags.Parse(subargs)
 		checkError(err)
-		if *dryRunArg == false {
+		if !*dryRunArg {
 			err = checkWritable(*fileArg)
 			checkError(err)
 		}

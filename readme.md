@@ -1,17 +1,25 @@
-# go-hostsfile
+# hostsfile
 
 This library will help you manipulate your /etc/hosts file. A description of
 the API [can be found at godoc][godoc].
 
+## Installation
+
+Find your target operating system (darwin, windows, linux) and desired bin
+directory, and modify the command below as appropriate:
+
+    curl --silent --location https://github.com/kevinburke/hostsfile/releases/download/1.1/hostsfile-linux-amd64 > /usr/local/bin/hostsfile && chmod 755 /usr/local/bin/hostsfile
+
+On Travis, you may want to create `$HOME/bin` and write to that, since
+/usr/local/bin isn't writable with their container-based infrastructure.
+
+The latest version is 1.1.
+
+If you have a Go development environment, you can also install via source code:
+
+    go get -u github.com/kevinburke/differ
+
 ## Command Line Usage
-
-You can install a command line binary:
-
-```
-go get github.com/kevinburke/hostsfile
-```
-
-and use it like so:
 
 ```
 hostsfile add www.facebook.com www.twitter.com www.adroll.com 127.0.0.1
@@ -41,7 +49,8 @@ hostsfile add --file=sample-hostsfile www.facebook.com www.twitter.com www.adrol
 
 ## Library Usage
 
-You can also call the functions in this library from Go code.
+You can also call the functions in this library from Go code. Here's an example
+where a hosts file is read, modified, and atomically written back to disk.
 
 ```go
 package main
