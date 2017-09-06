@@ -12,7 +12,7 @@ import (
 	"github.com/kevinburke/hostsfile/lib"
 )
 
-const Version = "1.1"
+const Version = "1.2"
 
 func checkError(err error) {
 	if err != nil {
