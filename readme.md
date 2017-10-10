@@ -17,7 +17,7 @@ The latest version is 1.2.
 
 If you have a Go development environment, you can also install via source code:
 
-    go get -u github.com/kevinburke/differ
+    go get -u github.com/kevinburke/hostsfile
 
 ## Command Line Usage
 
