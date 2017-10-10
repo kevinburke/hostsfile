@@ -165,7 +165,7 @@ func Encode(w io.Writer, h Hostsfile) error {
 			out = append([]string{record.IpAddress.String()}, out...)
 			toWrite = strings.Join(out, " ")
 		}
-		toWrite += "\n"
+		toWrite += eol
 		_, err := w.Write([]byte(toWrite))
 		if err != nil {
 			return err

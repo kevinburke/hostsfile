@@ -58,6 +58,8 @@ func usg(msg string, fs *flag.FlagSet) func() {
 	}
 }
 
+// doAdd reads a file from hfile, adds the given args ["www.facebook.com",
+// "127.0.0.1"] and writes the new file to out.
 func doAdd(hfile io.Reader, out io.Writer, args []string) error {
 	if len(args) == 0 {
 		return errors.New("Please provide a domain to add")
@@ -93,10 +95,6 @@ func doRemove(hfile io.Reader, out io.Writer, args []string) error {
 }
 
 func doRename(writtenFile *os.File, renameTo string) error {
-	if err := os.Chmod(writtenFile.Name(), 0644); err != nil {
-		return err
-	}
-
 	return os.Rename(writtenFile.Name(), renameTo)
 }
 
@@ -121,17 +119,17 @@ func dataPipedIn() bool {
 func main() {
 	flag.Usage = usg(usage, flag.CommandLine)
 	dryRunArg := flag.Bool("dry-run", false, "Print the updated host file to stdout instead of writing it")
-	fileArg := flag.String("file", "/etc/hosts", "File to read/write")
+	fileArg := flag.String("file", hostsfile.Location, "File to read/write")
 
 	addflags := flag.NewFlagSet("add", flag.ExitOnError)
 	addflags.Usage = usg(addUsage, addflags)
 	addflags.BoolVar(dryRunArg, "dry-run", false, "Print the updated host file to stdout instead of writing it")
-	addflags.StringVar(fileArg, "file", "/etc/hosts", "File to read/write")
+	addflags.StringVar(fileArg, "file", hostsfile.Location, "File to read/write")
 
 	removeflags := flag.NewFlagSet("remove", flag.ExitOnError)
 	removeflags.Usage = usg(removeUsage, removeflags)
 	removeflags.BoolVar(dryRunArg, "dry-run", false, "Print the updated host file to stdout instead of writing it")
-	removeflags.StringVar(fileArg, "file", "/etc/hosts", "File to read/write")
+	removeflags.StringVar(fileArg, "file", hostsfile.Location, "File to read/write")
 
 	flag.Parse()
 	subargs := []string{}
@@ -152,23 +150,24 @@ func main() {
 			err = checkWritable(*fileArg)
 			checkError(err)
 		}
-		var r io.Reader
+		var r io.ReadCloser
 		if dataPipedIn() {
-			r = os.Stdin
+			r = ioutil.NopCloser(os.Stdin)
 		} else {
 			f, err := os.Open(*fileArg)
 			checkError(err)
-			defer f.Close()
 			r = f
 		}
 		if *dryRunArg {
 			err = doAdd(r, os.Stdout, addflags.Args())
 			checkError(err)
 		} else {
-			tmp, err := ioutil.TempFile("/tmp", "hostsfile-temp")
+			tmp, err := tempFile(*fileArg)
 			checkError(err)
-			defer tmp.Close()
 			err = doAdd(r, tmp, addflags.Args())
+			checkError(err)
+			r.Close()
+			err = tmp.Close()
 			checkError(err)
 			err = doRename(tmp, *fileArg)
 			checkError(err)
@@ -180,23 +179,24 @@ func main() {
 			err = checkWritable(*fileArg)
 			checkError(err)
 		}
-		var r io.Reader
+		var r io.ReadCloser
 		if dataPipedIn() {
-			r = os.Stdin
+			r = ioutil.NopCloser(os.Stdin)
 		} else {
 			f, err := os.Open(*fileArg)
 			checkError(err)
-			defer f.Close()
 			r = f
 		}
 		if *dryRunArg {
 			err = doRemove(r, os.Stdout, removeflags.Args())
 			checkError(err)
 		} else {
-			tmp, err := ioutil.TempFile("/tmp", "hostsfile-temp")
+			tmp, err := tempFile(*fileArg)
 			checkError(err)
-			defer tmp.Close()
 			err = doRemove(r, tmp, removeflags.Args())
+			checkError(err)
+			r.Close()
+			err = tmp.Close()
 			checkError(err)
 			err = doRename(tmp, *fileArg)
 			checkError(err)
