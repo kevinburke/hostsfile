@@ -9,7 +9,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/kevinburke/hostsfile/lib"
+	"github.com/lende/hostsfile/lib"
 )
 
 const Version = "1.1"
@@ -93,10 +93,6 @@ func doRemove(hfile io.Reader, out io.Writer, args []string) error {
 }
 
 func doRename(writtenFile *os.File, renameTo string) error {
-	if err := os.Chmod(writtenFile.Name(), 0644); err != nil {
-		return err
-	}
-
 	return os.Rename(writtenFile.Name(), renameTo)
 }
 
@@ -146,23 +142,23 @@ func main() {
 			err = checkWritable(*fileArg)
 			checkError(err)
 		}
-		var r io.Reader
+		var r io.ReadCloser
 		if dataPipedIn() {
-			r = os.Stdin
+			r = ioutil.NopCloser(os.Stdin)
 		} else {
 			f, err := os.Open(*fileArg)
 			checkError(err)
-			defer f.Close()
 			r = f
 		}
 		if *dryRunArg {
 			err = doAdd(r, os.Stdout, addflags.Args())
 			checkError(err)
 		} else {
-			tmp, err := ioutil.TempFile("/tmp", "hostsfile-temp")
+			tmp, err := tempFile()
 			checkError(err)
-			defer tmp.Close()
 			err = doAdd(r, tmp, addflags.Args())
+			r.Close()
+			tmp.Close()
 			checkError(err)
 			err = doRename(tmp, *fileArg)
 			checkError(err)
@@ -174,23 +170,23 @@ func main() {
 			err = checkWritable(*fileArg)
 			checkError(err)
 		}
-		var r io.Reader
+		var r io.ReadCloser
 		if dataPipedIn() {
-			r = os.Stdin
+			r = ioutil.NopCloser(os.Stdin)
 		} else {
 			f, err := os.Open(*fileArg)
 			checkError(err)
-			defer f.Close()
 			r = f
 		}
 		if *dryRunArg {
 			err = doRemove(r, os.Stdout, removeflags.Args())
 			checkError(err)
 		} else {
-			tmp, err := ioutil.TempFile("/tmp", "hostsfile-temp")
+			tmp, err := tempFile()
 			checkError(err)
-			defer tmp.Close()
 			err = doRemove(r, tmp, removeflags.Args())
+			r.Close()
+			tmp.Close()
 			checkError(err)
 			err = doRename(tmp, *fileArg)
 			checkError(err)
