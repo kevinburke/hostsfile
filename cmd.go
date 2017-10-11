@@ -9,7 +9,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/lende/hostsfile/lib"
+	"github.com/kevinburke/hostsfile/lib"
 )
 
 const Version = "1.1"
