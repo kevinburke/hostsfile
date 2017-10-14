@@ -25,10 +25,10 @@ const usage = `Hostsfile manages your /etc/hosts file.
 
 The commands are:
 
-	add     <hostname> [<hostname...>] <ip>
-	remove  <hostname> [<hostname...>]
-	version
-	help    You're looking at it.
+	add         <hostname> [<hostname...>] <ip>
+	remove      <hostname> [<hostname...>]
+	version     Print the version
+	help        You're looking at it.
 
 `
 
@@ -135,7 +135,13 @@ func main() {
 
 	flag.Parse()
 	subargs := []string{}
-	if flag.NArg() > 1 {
+	switch flag.NArg() {
+	case 0:
+		flag.Usage()
+		return
+	case 1:
+		break
+	default:
 		subargs = flag.Args()[1:]
 	}
 	switch flag.Arg(0) {
