@@ -1,12 +1,28 @@
 .PHONY: test
 
+SHELL = /bin/bash -o pipefail
+
+BAZEL_VERSION := 0.7.0
+BAZEL_DEB := bazel_$(BAZEL_VERSION)_amd64.deb
+
 BUMP_VERSION := $(GOPATH)/bin/bump_version
 MEGACHECK := $(GOPATH)/bin/megacheck
 RELEASE := $(GOPATH)/bin/github-release
 WRITE_MAILMAP := $(GOPATH)/bin/write_mailmap
 
+UNAME := $(shell uname)
+
+test: lint
+	bazel test --test_output=errors //...
+
 $(MEGACHECK):
-	go get honnef.co/go/tools/cmd/megacheck
+ifeq ($(UNAME), Darwin)
+	curl --silent --location --output $(MEGACHECK) https://github.com/kevinburke/go-tools/releases/download/2017-10-04/megacheck-darwin-amd64
+endif
+ifeq ($(UNAME), Linux)
+	curl --silent --location --output $(MEGACHECK) https://github.com/kevinburke/go-tools/releases/download/2017-10-04/megacheck-linux-amd64
+endif
+	chmod 755 $(MEGACHECK)
 
 $(BUMP_VERSION):
 	go get -u github.com/Shyp/bump_version
@@ -28,11 +44,23 @@ lint: | $(MEGACHECK)
 	$(MEGACHECK) ./...
 	go vet ./...
 
-test: lint
-	go test ./...
-
 race-test: lint
-	go test -race ./...
+	bazel test --features=race --test_output=errors //...
+
+install-travis:
+	wget "https://storage.googleapis.com/bazel-apt/pool/jdk1.8/b/bazel/$(BAZEL_DEB)"
+	sudo dpkg --force-all -i $(BAZEL_DEB)
+	sudo apt-get install moreutils -y
+
+ci:
+	bazel --batch --host_jvm_args=-Dbazel.DigestFunction=SHA1 test \
+		--experimental_repository_cache="$$HOME/.bzrepos" \
+		--spawn_strategy=remote \
+		--test_output=errors \
+		--strategy=Javac=remote \
+		--noshow_progress \
+		--noshow_loading_progress \
+		--features=race //... 2>&1 | ts '[%Y-%m-%d %H:%M:%.S]'
 
 # Run "GITHUB_TOKEN=my-token make release version=0.x.y" to release a new version.
 release: race-test | $(BUMP_VERSION) $(RELEASE)
