@@ -8,9 +8,6 @@ import (
 	"syscall"
 )
 
-// Default location of hosts-file on Unix.
-var hostsFile = "/etc/hosts"
-
 // tempFile creates a new temporary hosts-file in an appropriate directory,
 // opens the file for writing, and returns the resulting *os.File.
 func tempFile(hostsPath string) (*os.File, error) {

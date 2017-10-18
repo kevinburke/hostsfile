@@ -6,9 +6,6 @@ import (
 	"path/filepath"
 )
 
-// Default location of hosts-file on Windows.
-var hostsFile = os.Getenv("SystemRoot") + "\\System32\\drivers\\etc\\hosts"
-
 // tempFile creates a new temporary hosts-file in an appropriate directory,
 // opens the file for writing, and returns the resulting *os.File.
 func tempFile(hostsPath string) (*os.File, error) {

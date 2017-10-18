@@ -117,17 +117,17 @@ func dataPipedIn() bool {
 func main() {
 	flag.Usage = usg(usage, flag.CommandLine)
 	dryRunArg := flag.Bool("dry-run", false, "Print the updated host file to stdout instead of writing it")
-	fileArg := flag.String("file", hostsFile, "File to read/write")
+	fileArg := flag.String("file", hostsfile.Location, "File to read/write")
 
 	addflags := flag.NewFlagSet("add", flag.ExitOnError)
 	addflags.Usage = usg(addUsage, addflags)
 	addflags.BoolVar(dryRunArg, "dry-run", false, "Print the updated host file to stdout instead of writing it")
-	addflags.StringVar(fileArg, "file", hostsFile, "File to read/write")
+	addflags.StringVar(fileArg, "file", hostsfile.Location, "File to read/write")
 
 	removeflags := flag.NewFlagSet("remove", flag.ExitOnError)
 	removeflags.Usage = usg(removeUsage, removeflags)
 	removeflags.BoolVar(dryRunArg, "dry-run", false, "Print the updated host file to stdout instead of writing it")
-	removeflags.StringVar(fileArg, "file", hostsFile, "File to read/write")
+	removeflags.StringVar(fileArg, "file", hostsfile.Location, "File to read/write")
 
 	flag.Parse()
 	subargs := []string{}
