@@ -13,8 +13,8 @@ var hostsFile = "/etc/hosts"
 
 // tempFile creates a new temporary hosts-file in an appropriate directory,
 // opens the file for writing, and returns the resulting *os.File.
-func tempFile() (*os.File, error) {
-	fs, err := os.Stat(hostsFile)
+func tempFile(hostsPath string) (*os.File, error) {
+	fs, err := os.Stat(hostsPath)
 	if err != nil {
 		return nil, err
 	}

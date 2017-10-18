@@ -154,7 +154,7 @@ func main() {
 			err = doAdd(r, os.Stdout, addflags.Args())
 			checkError(err)
 		} else {
-			tmp, err := tempFile()
+			tmp, err := tempFile(*fileArg)
 			checkError(err)
 			err = doAdd(r, tmp, addflags.Args())
 			r.Close()
@@ -182,7 +182,7 @@ func main() {
 			err = doRemove(r, os.Stdout, removeflags.Args())
 			checkError(err)
 		} else {
-			tmp, err := tempFile()
+			tmp, err := tempFile(*fileArg)
 			checkError(err)
 			err = doRemove(r, tmp, removeflags.Args())
 			r.Close()
