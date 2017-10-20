@@ -3,6 +3,7 @@
 BUMP_VERSION := $(GOPATH)/bin/bump_version
 MEGACHECK := $(GOPATH)/bin/megacheck
 RELEASE := $(GOPATH)/bin/github-release
+WRITE_MAILMAP := $(GOPATH)/bin/write_mailmap
 
 $(MEGACHECK):
 	go get honnef.co/go/tools/cmd/megacheck
@@ -12,6 +13,16 @@ $(BUMP_VERSION):
 
 $(RELEASE):
 	go get -u github.com/aktau/github-release
+
+$(WRITE_MAILMAP):
+	go get -u github.com/kevinburke/write_mailmap
+
+force: ;
+
+AUTHORS.txt: force | $(WRITE_MAILMAP)
+	$(WRITE_MAILMAP) > AUTHORS.txt
+
+authors: AUTHORS.txt
 
 lint: | $(MEGACHECK)
 	$(MEGACHECK) ./...
