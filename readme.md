@@ -8,12 +8,12 @@ the API [can be found at godoc][godoc].
 Find your target operating system (darwin, windows, linux) and desired bin
 directory, and modify the command below as appropriate:
 
-    curl --silent --location https://github.com/kevinburke/hostsfile/releases/download/1.2/hostsfile-linux-amd64 > /usr/local/bin/hostsfile && chmod 755 /usr/local/bin/hostsfile
+    curl --silent --location https://github.com/kevinburke/hostsfile/releases/download/1.3/hostsfile-linux-amd64 > /usr/local/bin/hostsfile && chmod 755 /usr/local/bin/hostsfile
 
 On Travis, you may want to create `$HOME/bin` and write to that, since
 /usr/local/bin isn't writable with their container-based infrastructure.
 
-The latest version is 1.2.
+The latest version is 1.3.
 
 If you have a Go development environment, you can also install via source code:
 
