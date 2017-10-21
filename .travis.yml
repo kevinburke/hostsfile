@@ -12,3 +12,4 @@ script:
 cache:
   directories:
     - $HOME/.bzrepos
+    - $HOME/.cache/bazel
