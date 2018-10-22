@@ -1,14 +1,10 @@
 go_import_path: github.com/kevinburke/hostsfile
 
 language: go
-sudo: required
-
-before_script:
-  - make install-travis
 
 script:
-  - make ci
+  - make race-test
 
 cache:
   directories:
-    - $HOME/.bzrepos
+    - $GOPATH/pkg

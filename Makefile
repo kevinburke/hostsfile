@@ -2,9 +2,6 @@
 
 SHELL = /bin/bash -o pipefail
 
-BAZEL_VERSION := 0.7.0
-BAZEL_DEB := bazel_$(BAZEL_VERSION)_amd64.deb
-
 BUMP_VERSION := $(GOPATH)/bin/bump_version
 MEGACHECK := $(GOPATH)/bin/megacheck
 RELEASE := $(GOPATH)/bin/github-release
@@ -12,8 +9,8 @@ WRITE_MAILMAP := $(GOPATH)/bin/write_mailmap
 
 UNAME := $(shell uname)
 
-test: lint
-	bazel test --test_output=errors //...
+test:
+	go test ./...
 
 $(MEGACHECK):
 ifeq ($(UNAME), Darwin)
@@ -45,22 +42,7 @@ lint: | $(MEGACHECK)
 	go vet ./...
 
 race-test: lint
-	bazel test --features=race --test_output=errors //...
-
-install-travis:
-	wget "https://storage.googleapis.com/bazel-apt/pool/jdk1.8/b/bazel/$(BAZEL_DEB)"
-	sudo dpkg --force-all -i $(BAZEL_DEB)
-	sudo apt-get install moreutils -y
-
-ci:
-	bazel --batch --host_jvm_args=-Dbazel.DigestFunction=SHA1 test \
-		--experimental_repository_cache="$$HOME/.bzrepos" \
-		--spawn_strategy=remote \
-		--test_output=errors \
-		--strategy=Javac=remote \
-		--noshow_progress \
-		--noshow_loading_progress \
-		--features=race //... 2>&1 | ts '[%Y-%m-%d %H:%M:%.S]'
+	go test -race ./...
 
 # Run "GITHUB_TOKEN=my-token make release version=0.x.y" to release a new version.
 release: race-test | $(BUMP_VERSION) $(RELEASE)
