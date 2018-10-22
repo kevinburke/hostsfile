@@ -42,6 +42,17 @@ Example:
 	hostsfile add --dry-run www.facebook.com 127.0.0.1
 `
 
+const getUsage = `Get an IP address from your /etc/hosts file.
+
+If a hostname is not found in your /etc/hosts file, an error message will be 
+written to stderr, and the script will exit with a non-zero return code.
+
+Example: 
+
+	hostsfile get www.facebook.com
+	> 127.0.0.1
+`
+
 const removeUsage = `Remove a set of hostnames from your /etc/hosts file.
 
 Example: 
@@ -126,6 +137,10 @@ func main() {
 	addflags.BoolVar(dryRunArg, "dry-run", false, "Print the updated host file to stdout instead of writing it")
 	addflags.StringVar(fileArg, "file", hostsfile.Location, "File to read/write")
 
+	getflags := flag.NewFlagSet("get", flag.ExitOnError)
+	getflags.Usage = usg(getUsage, getflags)
+	getflags.StringVar(fileArg, "file", hostsfile.Location, "File to read")
+
 	removeflags := flag.NewFlagSet("remove", flag.ExitOnError)
 	removeflags.Usage = usg(removeUsage, removeflags)
 	removeflags.BoolVar(dryRunArg, "dry-run", false, "Print the updated host file to stdout instead of writing it")
@@ -172,6 +187,41 @@ func main() {
 			err = doRename(tmp, *fileArg)
 			checkError(err)
 		}
+	case "get":
+		err := getflags.Parse(subargs)
+		checkError(err)
+		args := getflags.Args()
+		if len(args) != 1 {
+			fmt.Fprintf(os.Stderr, "hostsfile: please provide a hostname to get\n\n")
+			getflags.Usage()
+			os.Exit(2)
+		}
+		var r io.ReadCloser
+		if dataPipedIn() {
+			r = ioutil.NopCloser(os.Stdin)
+		} else {
+			f, err := os.Open(*fileArg)
+			checkError(err)
+			r = f
+		}
+		h, err := hostsfile.Decode(r)
+		checkError(err)
+		addrs := make(map[string]bool)
+		for _, record := range h.Records() {
+			for name := range record.Hostnames {
+				if name == args[0] {
+					addrs[record.IpAddress.String()] = true
+				}
+			}
+		}
+		if len(addrs) == 0 {
+			fmt.Fprintf(os.Stderr, "hostsfile: host %q not found\n", args[0])
+			os.Exit(1)
+		}
+		for name := range addrs {
+			fmt.Println(name)
+		}
+		os.Exit(0)
 	case "remove":
 		err := removeflags.Parse(subargs)
 		checkError(err)
@@ -214,7 +264,7 @@ func main() {
 		fmt.Fprintf(os.Stdout, "hostsfile version %s\n", Version)
 		os.Exit(2)
 	default:
-		fmt.Fprintf(os.Stderr, "hostsfile: unknown subcommand \"%s\"\n\n", flag.Arg(0))
+		fmt.Fprintf(os.Stderr, "hostsfile: unknown subcommand %q\n\n", flag.Arg(0))
 		usg(usage, flag.CommandLine)()
 	}
 }
