@@ -157,7 +157,7 @@ func Encode(w io.Writer, h Hostsfile) error {
 		} else {
 			out := make([]string, len(record.Hostnames))
 			i := 0
-			for name, _ := range record.Hostnames {
+			for name := range record.Hostnames {
 				out[i] = name
 				i++
 			}

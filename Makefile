@@ -1,4 +1,4 @@
-.PHONY: test
+.PHONY: test release
 
 SHELL = /bin/bash -o pipefail
 
