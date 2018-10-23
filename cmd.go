@@ -16,7 +16,7 @@ const Version = "1.3"
 
 func checkError(err error) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
+		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(2)
 	}
 }
@@ -74,6 +74,9 @@ func usg(msg string, fs *flag.FlagSet) func() {
 func doAdd(hfile io.Reader, out io.Writer, args []string) error {
 	if len(args) == 0 {
 		return errors.New("Please provide a domain to add")
+	}
+	if len(args) == 1 {
+		return fmt.Errorf(`Provide a domain and an IP address ("hostsfile add www.facebook.com 127.0.0.1")`)
 	}
 	lastAddr := args[len(args)-1]
 	ip, err := net.ResolveIPAddr("ip", lastAddr)
