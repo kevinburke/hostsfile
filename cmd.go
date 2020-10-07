@@ -9,7 +9,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/kevinburke/hostsfile/lib"
+	hostsfile "github.com/kevinburke/hostsfile/lib"
 )
 
 const Version = "1.4"
@@ -63,7 +63,7 @@ Example:
 
 func usg(msg string, fs *flag.FlagSet) func() {
 	return func() {
-		fmt.Fprintf(os.Stderr, msg)
+		fmt.Fprint(os.Stderr, msg)
 		fs.PrintDefaults()
 		os.Exit(2)
 	}
@@ -73,10 +73,10 @@ func usg(msg string, fs *flag.FlagSet) func() {
 // "127.0.0.1"] and writes the new file to out.
 func doAdd(hfile io.Reader, out io.Writer, args []string) error {
 	if len(args) == 0 {
-		return errors.New("Please provide a domain to add")
+		return errors.New("please provide a domain to add")
 	}
 	if len(args) == 1 {
-		return fmt.Errorf(`Provide a domain and an IP address ("hostsfile add www.facebook.com 127.0.0.1")`)
+		return fmt.Errorf(`provide a domain and an IP address ("hostsfile add www.facebook.com 127.0.0.1")`)
 	}
 	lastAddr := args[len(args)-1]
 	ip, err := net.ResolveIPAddr("ip", lastAddr)

@@ -3,7 +3,7 @@
 SHELL = /bin/bash -o pipefail
 
 BUMP_VERSION := $(GOPATH)/bin/bump_version
-MEGACHECK := $(GOPATH)/bin/megacheck
+STATICCHECK := $(GOPATH)/bin/staticcheck
 RELEASE := $(GOPATH)/bin/github-release
 WRITE_MAILMAP := $(GOPATH)/bin/write_mailmap
 
@@ -12,17 +12,11 @@ UNAME := $(shell uname)
 test:
 	go test ./...
 
-$(MEGACHECK):
-ifeq ($(UNAME), Darwin)
-	curl --silent --location --output $(MEGACHECK) https://github.com/kevinburke/go-tools/releases/download/2017-10-04/megacheck-darwin-amd64
-endif
-ifeq ($(UNAME), Linux)
-	curl --silent --location --output $(MEGACHECK) https://github.com/kevinburke/go-tools/releases/download/2017-10-04/megacheck-linux-amd64
-endif
-	chmod 755 $(MEGACHECK)
+$(STATICCHECK):
+	go get honnef.co/go/tools/cmd/staticcheck
 
 $(BUMP_VERSION):
-	go get -u github.com/Shyp/bump_version
+	go get -u github.com/kevinburke/bump_version
 
 $(RELEASE):
 	go get -u github.com/aktau/github-release
@@ -37,8 +31,8 @@ AUTHORS.txt: force | $(WRITE_MAILMAP)
 
 authors: AUTHORS.txt
 
-lint: | $(MEGACHECK)
-	$(MEGACHECK) ./...
+lint: | $(STATICCHECK)
+	$(STATICCHECK) ./...
 	go vet ./...
 
 race-test: lint

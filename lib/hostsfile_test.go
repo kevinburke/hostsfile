@@ -66,7 +66,7 @@ func TestDecode(t *testing.T) {
 	if err == nil {
 		t.Error("expected Decode(\"blah\") to return invalid, got no error")
 	}
-	if err.Error() != "Invalid hostsfile entry: blah" {
+	if err.Error() != "invalid hostsfile entry: blah" {
 		t.Errorf("expected Decode(\"blah\") to return invalid, got %s", err.Error())
 	}
 
@@ -89,15 +89,15 @@ func sample(t *testing.T) Hostsfile {
 	ok(t, err)
 	return Hostsfile{
 		records: []*Record{
-			&Record{
+			{
 				IpAddress: *one27,
 				Hostnames: map[string]bool{"foobar": true},
 			},
-			&Record{
+			{
 				IpAddress: *one92,
 				Hostnames: map[string]bool{"bazbaz": true, "blahbar": true},
 			},
-			&Record{
+			{
 				IpAddress: *oneip6,
 				Hostnames: map[string]bool{"bazbaz": true},
 			},
@@ -110,14 +110,14 @@ func comment(t *testing.T) Hostsfile {
 	ok(t, err)
 	return Hostsfile{
 		records: []*Record{
-			&Record{
+			{
 				comment: "# Don't delete this line!",
 			},
-			&Record{
+			{
 				comment: "shouldnt matter",
 				isBlank: true,
 			},
-			&Record{
+			{
 				IpAddress: *one92,
 				Hostnames: map[string]bool{"bazbaz": true},
 			},

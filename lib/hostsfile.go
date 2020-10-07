@@ -119,7 +119,7 @@ func Decode(rdr io.Reader) (Hostsfile, error) {
 		} else {
 			vals := strings.Fields(line)
 			if len(vals) <= 1 {
-				return Hostsfile{}, fmt.Errorf("Invalid hostsfile entry: %s", line)
+				return Hostsfile{}, fmt.Errorf("invalid hostsfile entry: %s", line)
 			}
 			ip, err := net.ResolveIPAddr("ip", vals[0])
 			if err != nil {
