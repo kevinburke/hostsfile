@@ -5,18 +5,10 @@ go_library(
     srcs = [
         "hostsfile.go",
         "hostsfile_nonwindows.go",
-    ] + select({
-        "@io_bazel_rules_go//go/platform:darwin_amd64": [
-            "hostsfile_unix.go",
-        ],
-        "@io_bazel_rules_go//go/platform:linux_amd64": [
-            "hostsfile_unix.go",
-        ],
-        "@io_bazel_rules_go//go/platform:windows_amd64": [
-            "hostsfile_windows.go",
-        ],
-        "//conditions:default": [],
-    }),
+        "hostsfile_plan9.go",
+        "hostsfile_unix.go",
+        "hostsfile_windows.go",
+    ],
     importpath = "github.com/kevinburke/hostsfile/lib",
     visibility = ["//visibility:public"],
 )
@@ -25,6 +17,6 @@ go_test(
     name = "go_default_test",
     timeout = "short",
     srcs = ["hostsfile_test.go"],
+    embed = [":go_default_library"],
     importpath = "github.com/kevinburke/hostsfile/lib",
-    library = ":go_default_library",
 )
