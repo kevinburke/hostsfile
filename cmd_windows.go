@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -11,5 +10,5 @@ import (
 func tempFile(hostsPath string) (*os.File, error) {
 	// Create the temporary file in the same location as the hosts-file to inherit
 	// the correct permissions from the parent directory.
-	return ioutil.TempFile(filepath.Dir(hostsPath), "hostsfile-temp")
+	return os.CreateTemp(filepath.Dir(hostsPath), "hostsfile-temp")
 }

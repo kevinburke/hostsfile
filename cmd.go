@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 
@@ -170,7 +169,7 @@ func main() {
 		}
 		var r io.ReadCloser
 		if dataPipedIn() {
-			r = ioutil.NopCloser(os.Stdin)
+			r = io.NopCloser(os.Stdin)
 		} else {
 			f, err := os.Open(*fileArg)
 			checkError(err)
@@ -201,7 +200,7 @@ func main() {
 		}
 		var r io.ReadCloser
 		if dataPipedIn() {
-			r = ioutil.NopCloser(os.Stdin)
+			r = io.NopCloser(os.Stdin)
 		} else {
 			f, err := os.Open(*fileArg)
 			checkError(err)
@@ -234,7 +233,7 @@ func main() {
 		}
 		var r io.ReadCloser
 		if dataPipedIn() {
-			r = ioutil.NopCloser(os.Stdin)
+			r = io.NopCloser(os.Stdin)
 		} else {
 			f, err := os.Open(*fileArg)
 			checkError(err)

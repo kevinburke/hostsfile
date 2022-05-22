@@ -61,7 +61,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -94,7 +93,7 @@ func main() {
 
 
 	// Write to a temporary file and then atomically copy it into place.
-	tmpf, err := ioutil.TempFile("/tmp", "hostsfile-temp")
+	tmpf, err := os.CreateTemp("/tmp", "hostsfile-temp")
 	checkError(err)
 
 	err = hostsfile.Encode(tmpf, h)

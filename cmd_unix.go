@@ -1,9 +1,9 @@
+//go:build darwin || dragonfly || freebsd || linux || nacl || netbsd || openbsd || solaris
 // +build darwin dragonfly freebsd linux nacl netbsd openbsd solaris
 
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"syscall"
 )
@@ -15,7 +15,7 @@ func tempFile(hostsPath string) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	f, err := ioutil.TempFile("", "hostsfile-temp")
+	f, err := os.CreateTemp("", "hostsfile-temp")
 	if err != nil {
 		return nil, err
 	}
