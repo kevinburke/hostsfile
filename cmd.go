@@ -264,7 +264,7 @@ func main() {
 		}
 	case "version":
 		fmt.Fprintf(os.Stdout, "hostsfile version %s\n", Version)
-		os.Exit(2)
+		os.Exit(0)
 	default:
 		fmt.Fprintf(os.Stderr, "hostsfile: unknown subcommand %q\n\n", flag.Arg(0))
 		usg(usage, flag.CommandLine)()
