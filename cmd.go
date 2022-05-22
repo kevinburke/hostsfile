@@ -11,7 +11,7 @@ import (
 	hostsfile "github.com/kevinburke/hostsfile/lib"
 )
 
-const Version = "1.5"
+const Version = "1.6"
 
 func checkError(err error) {
 	if err != nil {
