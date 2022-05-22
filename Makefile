@@ -40,5 +40,5 @@ race-test: lint
 
 # Run "GITHUB_TOKEN=my-token make release version=0.x.y" to release a new version.
 release: race-test
-	$(BUMP_VERSION) --patch cmd.go
+	$(BUMP_VERSION) patch cmd.go
 	git push origin --tags
