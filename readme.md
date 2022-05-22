@@ -8,24 +8,25 @@ godoc][godoc].
 
 ## Installation
 
-Find your target operating system (darwin, windows, linux) and desired bin
-directory, and modify the command below as appropriate:
+On Mac, install via Homebrew:
 
-    curl --silent --location https://github.com/kevinburke/hostsfile/releases/download/1.4/hostsfile-linux-amd64 > /usr/local/bin/hostsfile && chmod 755 /usr/local/bin/hostsfile
+```
+brew install kevinburke/safe/hostsfile
+```
 
-On Travis, you may want to create `$HOME/bin` and write to that, since
-/usr/local/bin isn't writable with their container-based infrastructure.
 
-The latest version is 1.4.
+If you have a Go development environment, you can install via source code:
 
-If you have a Go development environment, you can also install via source code:
-
-    go get -u github.com/kevinburke/hostsfile
+    go get github.com/kevinburke/hostsfile@latest
 
 ## Command Line Usage
 
+Easily add and remove entries from /etc/hosts.
+
 ```
+# Assign 127.0.0.1 to all of the given hostnames
 hostsfile add www.facebook.com www.twitter.com www.adroll.com 127.0.0.1
+# Remove all hostnames from /etc/hosts
 hostsfile remove www.facebook.com www.twitter.com www.adroll.com
 ```
 
