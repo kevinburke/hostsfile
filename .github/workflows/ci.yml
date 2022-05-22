@@ -1,0 +1,24 @@
+on: [push, pull_request]
+name: Test
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version: [1.18.x]
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go-version }}
+    - uses: actions/checkout@v2
+      with:
+         path: './src/github.com/kevinburke/hostsfile'
+    # staticcheck needs this for GOPATH
+    - run: echo "GOPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+    - run: echo "GO111MODULE=off" >> $GITHUB_ENV
+    - run: echo "PATH=$GITHUB_WORKSPACE/bin:$PATH" >> $GITHUB_ENV
+    - name: Run tests
+      run: make race-test
+      working-directory: './src/github.com/kevinburke/hostsfile'
